@@ -383,6 +383,26 @@
 
 <script>
 const STORE_KEY = 'ox-questions';
+
+const DEFAULT_QUESTIONS = [
+  { id:'d1', text:'스파이더맨: 브랜드 뉴 데이는 스파이더맨: 노 웨이 홈 이후 4년이 지난 시점을 배경으로 한다.', answer:'O', explanation:'공식 시놉시스에 스파이더맨: 노 웨이 홈으로부터 4년 뒤 이야기라고 명시돼 있어요.' },
+  { id:'d2', text:'스파이더맨: 브랜드 뉴 데이에서 뉴욕 사람들은 이제 피터 파커가 스파이더맨이라는 사실과 그의 이름을 모두 기억하고 있다.', answer:'X', explanation:'스파이더맨: 노 웨이 홈 결말에서 기억이 지워져, 더 이상 그의 이름을 모르는 뉴욕에서 살아가요.' },
+  { id:'d3', text:'스파이더맨: 브랜드 뉴 데이에서 피터는 사랑하는 사람들의 기억 속에서 스스로를 지운 채 완전히 혼자 살아간다.', answer:'O', explanation:'공식 시놉시스에 나오는 설정이에요.' },
+  { id:'d4', text:'스파이더맨: 브랜드 뉴 데이에서 피터는 도시를 지키는 일에 모든 것을 바친 이른바 "풀타임 스파이더맨"으로 살아간다.', answer:'O', explanation:'공식 시놉시스의 표현이에요.' },
+  { id:'d5', text:'스파이더맨: 브랜드 뉴 데이에서 점점 커지는 책임과 압박감이 피터의 몸에 예상치 못한 변화를 일으키기 시작한다.', answer:'O', explanation:'이 변화가 피터의 존재 자체를 위협하는 요소로 이어져요.' },
+  { id:'d6', text:'스파이더맨: 브랜드 뉴 데이에서 피터는 지금까지 맞서온 것 중 가장 강력한 새로운 위협과 마주하게 된다.', answer:'O', explanation:'공식 시놉시스에서 "가장 강력한 위협이 모습을 드러낸다"고 밝히고 있어요.' },
+  { id:'d7', text:'스파이더맨: 브랜드 뉴 데이 속 새로운 연쇄 범죄 사건들은 서로 아무 관련이 없다.', answer:'X', explanation:'공식 시놉시스는 이 사건들을 "기묘하게 얽힌" 연쇄 범죄로 설명해요.' },
+  { id:'d8', text:'스파이더맨: 브랜드 뉴 데이의 이야기는 피터가 완전히 평범한 삶으로 돌아가는 데 성공하며 시작된다.', answer:'X', explanation:'반대로 그는 모두의 기억에서 지워진 채 철저히 혼자인 상태에서 이야기가 시작돼요.' },
+
+  { id:'d9', text:'스파이더맨: 노 웨이 홈은 미스테리오가 피터의 정체를 세상에 폭로한 직후를 배경으로 한다.', answer:'O', explanation:'전작 스파이더맨: 파 프롬 홈 결말의 폭로 사건 바로 다음 이야기예요.' },
+  { id:'d10', text:'스파이더맨: 노 웨이 홈에서 피터는 닥터 스트레인지에게 세상 모든 사람이 자신의 정체를 잊게 해달라고 부탁한다.', answer:'O', explanation:'이 부탁에서 이야기가 본격적으로 시작돼요.' },
+  { id:'d11', text:'스파이더맨: 노 웨이 홈에서 닥터 스트레인지의 주문은 아무 문제 없이 깔끔하게 성공한다.', answer:'X', explanation:'주문 도중 문제가 생기면서 다른 세계관의 존재들이 넘어오게 돼요.' },
+  { id:'d12', text:'스파이더맨: 노 웨이 홈에서 주문이 잘못되면서 다른 세계관의 빌런들이 이 세계로 넘어온다.', answer:'O', explanation:'그린 고블린, 닥터 옥토퍼스 등 이전 스파이더맨 영화들의 빌런들이 등장해요.' },
+  { id:'d13', text:'스파이더맨: 노 웨이 홈에는 오직 한 명의 스파이더맨만 등장한다.', answer:'X', explanation:'톰 홀랜드 외에 다른 두 세계관의 스파이더맨도 함께 등장해요.' },
+  { id:'d14', text:'스파이더맨: 노 웨이 홈에서 메이 숙모는 마지막 전투 도중 목숨을 잃는다.', answer:'O', explanation:'이 사건이 이후 시리즈의 중요한 배경이 돼요.' },
+  { id:'d15', text:'스파이더맨: 노 웨이 홈 마지막에서 피터는 스트레인지에게 부탁해 세상 모든 사람의 기억에서 자신을 완전히 지운다.', answer:'O', explanation:'이 선택 때문에 스파이더맨: 브랜드 뉴 데이에서 아무도 그를 기억하지 못하는 상태로 이어져요.' }
+];
+
 let questions = [];
 let quizOrder = [];
 let quizIdx = 0;
@@ -407,9 +427,14 @@ function shuffle(arr){
 async function loadQuestions(){
   try{
     const raw = localStorage.getItem(STORE_KEY);
-    questions = raw ? JSON.parse(raw) : [];
+    if(raw === null){
+      questions = DEFAULT_QUESTIONS.slice();
+      localStorage.setItem(STORE_KEY, JSON.stringify(questions));
+    }else{
+      questions = JSON.parse(raw);
+    }
   }catch(e){
-    questions = [];
+    questions = DEFAULT_QUESTIONS.slice();
   }
 }
 

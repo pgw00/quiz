@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>OX 정답노트</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F6F1E4;
+    --paper-line: #E1D8BE;
+    --ink: #2A2823;
+    --ink-soft: #6B6455;
+    --o-green: #2F6B4F;
+    --o-green-deep: #1F4C37;
+    --x-red: #B23A2E;
+    --x-red-deep: #862A21;
+    --gold: #C08A28;
+    --card-shadow: 0 18px 40px rgba(42,40,35,0.14);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(192,138,40,0.07), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(47,107,79,0.07), transparent 40%),
+      var(--paper);
+    font-family:'Noto Sans KR', sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 60px;
+  }
+  .app{
+    width:100%;
+    max-width:560px;
+  }
+  .masthead{
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .masthead .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.28em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  .masthead h1{
+    font-family:'Black Han Sans', sans-serif;
+    font-size:44px;
+    margin:6px 0 2px;
+    letter-spacing:0.02em;
+    color:var(--ink);
+  }
+  .masthead h1 span{ color:var(--x-red); }
+  .masthead p{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin:22px 0 18px;
+    border-bottom:2px solid var(--paper-line);
+  }
+  .tab{
+    flex:1;
+    padding:11px 0;
+    text-align:center;
+    font-weight:700;
+    font-size:14.5px;
+    color:var(--ink-soft);
+    background:none;
+    border:none;
+    cursor:pointer;
+    position:relative;
+    letter-spacing:0.01em;
+  }
+  .tab.active{ color:var(--ink); }
+  .tab.active::after{
+    content:"";
+    position:absolute;
+    left:10%; right:10%; bottom:-2px;
+    height:3px;
+    background:var(--gold);
+    border-radius:2px;
+  }
+
+  .card{
+    background:#FFFDF7;
+    border:1px solid var(--paper-line);
+    border-radius:14px;
+    box-shadow:var(--card-shadow);
+    padding:26px 24px 30px;
+    position:relative;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 37px, var(--paper-line) 37px 38px);
+    background-position: 0 68px;
+  }
+  .card::before{ content:none; }
+  .torn{
+    height:14px;
+    margin:0 -1px -1px;
+    background:
+      linear-gradient(135deg, #FFFDF7 25%, transparent 25%) -6px 0/12px 12px repeat-x,
+      linear-gradient(-135deg, #FFFDF7 25%, transparent 25%) -6px 0/12px 12px repeat-x;
+    border:1px solid var(--paper-line);
+    border-top:none;
+    border-radius:0 0 14px 14px;
+  }
+
+  /* ---- Solve tab ---- */
+  .score-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .score-row b{ color:var(--ink); font-size:14px; }
+  .q-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .q-text{
+    font-size:20px;
+    line-height:1.55;
+    font-weight:700;
+    min-height:80px;
+    margin-bottom:22px;
+  }
+  .choice-row{
+    display:flex;
+    gap:16px;
+    justify-content:center;
+    margin:8px 0 6px;
+  }
+  .choice-btn{
+    width:104px; height:104px;
+    border-radius:50%;
+    border:4px solid var(--ink);
+    background:#fff;
+    font-family:'Black Han Sans', sans-serif;
+    font-size:44px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+    color:var(--ink);
+  }
+  .choice-btn:hover{ transform:translateY(-3px); box-shadow:0 8px 18px rgba(0,0,0,0.12); }
+  .choice-btn.o{ border-color:var(--o-green); color:var(--o-green-deep); }
+  .choice-btn.x{ border-color:var(--x-red); color:var(--x-red-deep); }
+  .choice-btn:disabled{ cursor:default; opacity:0.55; transform:none; box-shadow:none; }
+
+  .stamp-zone{
+    position:relative;
+    min-height:170px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+  }
+  .stamp{
+    font-family:'Black Han Sans', sans-serif;
+    font-size:96px;
+    line-height:1;
+    transform:rotate(-14deg) scale(0.3);
+    opacity:0;
+    animation: stampIn .32s cubic-bezier(.2,1.4,.5,1) forwards;
+  }
+  .stamp.correct{ color:var(--o-green); text-shadow:0 3px 0 rgba(31,76,55,0.25); }
+  .stamp.wrong{ color:var(--x-red); text-shadow:0 3px 0 rgba(134,42,33,0.25); }
+  @keyframes stampIn{
+    0%{ transform:rotate(-14deg) scale(0.3); opacity:0; }
+    60%{ transform:rotate(-8deg) scale(1.12); opacity:1; }
+    100%{ transform:rotate(-8deg) scale(1); opacity:1; }
+  }
+  .feedback-text{
+    font-size:14px;
+    color:var(--ink-soft);
+    text-align:center;
+    max-width:400px;
+    line-height:1.6;
+  }
+  .next-btn, .primary-btn{
+    display:block;
+    margin:20px auto 0;
+    background:var(--ink);
+    color:#FFFDF7;
+    border:none;
+    padding:12px 28px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    font-family:'Noto Sans KR', sans-serif;
+  }
+  .next-btn:hover, .primary-btn:hover{ background:#000; }
+
+  .empty-state{
+    text-align:center;
+    padding:36px 10px;
+    color:var(--ink-soft);
+    font-size:14.5px;
+    line-height:1.7;
+  }
+  .empty-state b{ color:var(--ink); }
+
+  .result-wrap{ text-align:center; padding:14px 0 4px; }
+  .result-wrap .big{
+    font-family:'Black Han Sans', sans-serif;
+    font-size:56px;
+    margin:6px 0;
+  }
+  .result-wrap .big .o{ color:var(--o-green); }
+  .result-wrap .big .slash{ color:var(--paper-line); }
+
+  /* ---- Manage tab ---- */
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    letter-spacing:0.02em;
+  }
+  textarea, input[type=text]{
+    width:100%;
+    border:1.5px solid var(--paper-line);
+    border-radius:8px;
+    padding:10px 12px;
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14.5px;
+    resize:vertical;
+    background:#fff;
+    color:var(--ink);
+  }
+  textarea:focus, input[type=text]:focus{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold); }
+  .ox-toggle{ display:flex; gap:10px; }
+  .ox-toggle button{
+    flex:1;
+    padding:10px 0;
+    border-radius:8px;
+    border:1.5px solid var(--paper-line);
+    background:#fff;
+    font-family:'Black Han Sans', sans-serif;
+    font-size:20px;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .ox-toggle button.sel-o{ border-color:var(--o-green); color:var(--o-green-deep); background:#EFF6F1; }
+  .ox-toggle button.sel-x{ border-color:var(--x-red); color:var(--x-red-deep); background:#FBEFED; }
+
+  .q-list{ margin-top:22px; border-top:2px solid var(--paper-line); padding-top:16px; }
+  .q-list h3{
+    font-size:12.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+  }
+  .q-item{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:12px 0;
+    border-bottom:1px dashed var(--paper-line);
+  }
+  .q-item:last-child{ border-bottom:none; }
+  .q-item .badge{
+    flex:0 0 30px;
+    height:30px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Black Han Sans', sans-serif;
+    font-size:16px;
+    border:2px solid;
+  }
+  .q-item .badge.o{ border-color:var(--o-green); color:var(--o-green-deep); }
+  .q-item .badge.x{ border-color:var(--x-red); color:var(--x-red-deep); }
+  .q-item .body{ flex:1; }
+  .q-item .qt{ font-size:14.5px; font-weight:500; line-height:1.5; }
+  .q-item .expl{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; }
+  .q-item .del{
+    flex:0 0 auto;
+    background:none;
+    border:1px solid var(--paper-line);
+    color:var(--ink-soft);
+    border-radius:7px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .q-item .del:hover{ border-color:var(--x-red); color:var(--x-red-deep); }
+
+  .status-line{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-top:14px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .shared-note{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    background:#FBF2DC;
+    border:1px solid #EBD9A6;
+    border-radius:8px;
+    padding:8px 12px;
+    margin-bottom:16px;
+    line-height:1.55;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="masthead">
+    <div class="eyebrow">TRUE OR FALSE · QUIZ SHEET</div>
+    <h1>OX <span>정답</span>노트</h1>
+    <p>문제를 등록하고, 링크 하나로 풀어보는 OX 시험지</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="solve">✎ 문제 풀기</button>
+    <button class="tab" data-tab="manage">🗂 문제 관리</button>
+  </div>
+
+  <div class="card" id="solveCard">
+    <div id="solveBody"></div>
+  </div>
+  <div class="torn"></div>
+
+  <div id="manageLock" style="display:none;">
+    <div class="card">
+      <div class="q-num" style="margin-bottom:14px;">관리자 확인</div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="text" id="inputPw" placeholder="비밀번호를 입력하세요" autocomplete="off">
+      </div>
+      <button class="primary-btn" id="btnUnlock">확인</button>
+      <div class="status-line" id="pwStatus"></div>
+    </div>
+  </div>
+
+  <div id="manageCard" style="display:none;">
+    <div class="card">
+      <div class="shared-note">추가·삭제한 문제는 <b>이 브라우저에만 저장</b>돼요. 다른 기기나 다른 사람의 화면에는 반영되지 않아요.</div>
+      <div class="field">
+        <label>문제 내용</label>
+        <textarea id="inputQuestion" rows="2" placeholder="예: 대한민국의 수도는 부산이다."></textarea>
+      </div>
+      <div class="field">
+        <label>정답</label>
+        <div class="ox-toggle">
+          <button type="button" id="btnPickO">O</button>
+          <button type="button" id="btnPickX">X</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>해설 (선택)</label>
+        <input type="text" id="inputExpl" placeholder="정답 확인 후 보여줄 짧은 설명">
+      </div>
+      <button class="primary-btn" id="btnAdd">+ 문제 추가하기</button>
+      <div class="status-line" id="addStatus"></div>
+
+      <div class="q-list">
+        <h3 id="listTitle">등록된 문제</h3>
+        <div id="qList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_KEY = 'ox-questions';
+let questions = [];
+let quizOrder = [];
+let quizIdx = 0;
+let score = 0;
+let answeredCurrent = false;
+let picked = null; // for add form
+
+const solveBody = document.getElementById('solveBody');
+const qList = document.getElementById('qList');
+const listTitle = document.getElementById('listTitle');
+const addStatus = document.getElementById('addStatus');
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+async function loadQuestions(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    questions = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    questions = [];
+  }
+}
+
+async function saveQuestions(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(questions));
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function startQuiz(){
+  quizOrder = shuffle(questions);
+  quizIdx = 0;
+  score = 0;
+  answeredCurrent = false;
+  renderSolve();
+}
+
+function renderSolve(){
+  if(questions.length === 0){
+    solveBody.innerHTML = `
+      <div class="empty-state">
+        <b>아직 등록된 문제가 없어요.</b><br>
+        위 탭에서 <b>'문제 관리'</b>로 이동해 OX 문제를 추가해보세요.
+      </div>`;
+    return;
+  }
+  if(quizOrder.length === 0){ startQuiz(); return; }
+
+  if(quizIdx >= quizOrder.length){
+    solveBody.innerHTML = `
+      <div class="result-wrap">
+        <div class="eyebrow" style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.2em;color:var(--ink-soft);">RESULT</div>
+        <div class="big"><span class="o">${score}</span><span class="slash"> / </span>${quizOrder.length}</div>
+        <div class="feedback-text">${score === quizOrder.length ? '전부 맞혔어요, 완벽해요!' : '수고했어요. 다시 풀면서 복습해볼까요?'}</div>
+        <button class="primary-btn" id="btnRetry">다시 풀기</button>
+      </div>`;
+    document.getElementById('btnRetry').onclick = startQuiz;
+    return;
+  }
+
+  const q = quizOrder[quizIdx];
+  solveBody.innerHTML = `
+    <div class="score-row">
+      <span>SCORE <b>${score}</b> / ${quizIdx}</span>
+      <span>문제 <b>${quizIdx+1}</b> / ${quizOrder.length}</span>
+    </div>
+    <div class="q-num">Q${String(quizIdx+1).padStart(2,'0')}.</div>
+    <div class="q-text">${escapeHtml(q.text)}</div>
+    <div class="choice-row" id="choiceRow">
+      <button class="choice-btn o" data-v="O">O</button>
+      <button class="choice-btn x" data-v="X">X</button>
+    </div>
+  `;
+  document.querySelectorAll('#choiceRow .choice-btn').forEach(btn=>{
+    btn.onclick = () => answer(btn.dataset.v, q);
+  });
+}
+
+function answer(val, q){
+  if(answeredCurrent) return;
+  answeredCurrent = true;
+  const correct = val === q.answer;
+  if(correct) score++;
+
+  solveBody.innerHTML = `
+    <div class="score-row">
+      <span>SCORE <b>${score}</b> / ${quizIdx+1}</span>
+      <span>문제 <b>${quizIdx+1}</b> / ${quizOrder.length}</span>
+    </div>
+    <div class="q-num">Q${String(quizIdx+1).padStart(2,'0')}.</div>
+    <div class="q-text">${escapeHtml(q.text)}</div>
+    <div class="stamp-zone">
+      <div class="stamp ${correct?'correct':'wrong'}">${correct?'O':'X'}</div>
+      <div class="feedback-text">
+        ${correct ? '정답이에요!' : `틀렸어요. 정답은 <b>${q.answer}</b> 입니다.`}
+        ${q.explanation ? `<br>${escapeHtml(q.explanation)}` : ''}
+      </div>
+    </div>
+    <button class="next-btn" id="btnNext">${quizIdx+1 < quizOrder.length ? '다음 문제 →' : '결과 보기 →'}</button>
+  `;
+  document.getElementById('btnNext').onclick = () => {
+    quizIdx++;
+    answeredCurrent = false;
+    renderSolve();
+  };
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---- Manage tab ----
+function renderList(){
+  listTitle.textContent = `등록된 문제 (${questions.length})`;
+  if(questions.length === 0){
+    qList.innerHTML = `<div class="empty-state" style="padding:18px 4px;">등록된 문제가 없어요. 위 폼으로 첫 문제를 추가해보세요.</div>`;
+    return;
+  }
+  qList.innerHTML = questions.map(q => `
+    <div class="q-item" data-id="${q.id}">
+      <div class="badge ${q.answer==='O'?'o':'x'}">${q.answer}</div>
+      <div class="body">
+        <div class="qt">${escapeHtml(q.text)}</div>
+        ${q.explanation ? `<div class="expl">${escapeHtml(q.explanation)}</div>` : ''}
+      </div>
+      <button class="del" data-id="${q.id}">삭제</button>
+    </div>
+  `).join('');
+  qList.querySelectorAll('.del').forEach(btn=>{
+    btn.onclick = () => deleteQuestion(btn.dataset.id);
+  });
+}
+
+async function deleteQuestion(id){
+  questions = questions.filter(q => q.id !== id);
+  renderList();
+  const ok = await saveQuestions();
+  addStatus.textContent = ok ? '삭제됐어요.' : '삭제 저장에 실패했어요. 다시 시도해주세요.';
+  setTimeout(()=> addStatus.textContent = '', 2200);
+}
+
+document.getElementById('btnPickO').onclick = () => setPick('O');
+document.getElementById('btnPickX').onclick = () => setPick('X');
+function setPick(v){
+  picked = v;
+  document.getElementById('btnPickO').className = v==='O' ? 'sel-o' : '';
+  document.getElementById('btnPickX').className = v==='X' ? 'sel-x' : '';
+}
+
+document.getElementById('btnAdd').onclick = async () => {
+  const text = document.getElementById('inputQuestion').value.trim();
+  const expl = document.getElementById('inputExpl').value.trim();
+  if(!text){ addStatus.textContent = '문제 내용을 입력해주세요.'; return; }
+  if(!picked){ addStatus.textContent = '정답(O 또는 X)을 선택해주세요.'; return; }
+
+  const newQ = {
+    id: 'q_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+    text, answer: picked, explanation: expl
+  };
+  questions.push(newQ);
+  renderList();
+  document.getElementById('inputQuestion').value = '';
+  document.getElementById('inputExpl').value = '';
+  picked = null;
+  document.getElementById('btnPickO').className = '';
+  document.getElementById('btnPickX').className = '';
+
+  addStatus.textContent = '저장 중...';
+  const ok = await saveQuestions();
+  addStatus.textContent = ok ? '문제가 추가됐어요.' : '저장에 실패했어요. 다시 시도해주세요.';
+  setTimeout(()=> addStatus.textContent = '', 2200);
+};
+
+// ---- Manage lock ----
+const MANAGE_PW = '1234';
+let unlocked = false;
+
+document.getElementById('btnUnlock').onclick = tryUnlock;
+document.getElementById('inputPw').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') tryUnlock();
+});
+
+function tryUnlock(){
+  const pwStatus = document.getElementById('pwStatus');
+  const val = document.getElementById('inputPw').value;
+  if(val === MANAGE_PW){
+    unlocked = true;
+    document.getElementById('manageLock').style.display = 'none';
+    document.getElementById('manageCard').style.display = 'block';
+    document.getElementById('inputPw').value = '';
+    pwStatus.textContent = '';
+  }else{
+    pwStatus.textContent = '비밀번호가 올바르지 않아요.';
+  }
+}
+
+// ---- Tabs ----
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const isSolve = tab.dataset.tab === 'solve';
+    document.getElementById('solveCard').style.display = isSolve ? 'block' : 'none';
+    document.querySelector('.torn').style.display = isSolve ? 'block' : 'none';
+
+    if(isSolve){
+      document.getElementById('manageLock').style.display = 'none';
+      document.getElementById('manageCard').style.display = 'none';
+      startQuiz();
+    }else{
+      if(unlocked){
+        document.getElementById('manageCard').style.display = 'block';
+      }else{
+        document.getElementById('manageLock').style.display = 'block';
+        document.getElementById('inputPw').focus();
+      }
+    }
+  };
+});
+
+// ---- Init ----
+(async function init(){
+  solveBody.innerHTML = `<div class="empty-state">불러오는 중...</div>`;
+  await loadQuestions();
+  renderList();
+  startQuiz();
+})();
+</script>
+</body>
+</html>

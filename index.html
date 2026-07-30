@@ -223,6 +223,11 @@
   }
   .result-wrap .big .o{ color:var(--o-green); }
   .result-wrap .big .slash{ color:var(--paper-line); }
+  .spider-anim{ position:relative; width:100%; height:110px; display:flex; align-items:center; justify-content:center; margin:6px 0; }
+  .web-burst, .web-torn{ position:absolute; width:170px; height:auto; animation: webPulse 1.6s ease-in-out infinite; }
+  .spider-emoji{ position:relative; font-size:40px; animation: dropIn .5s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes webPulse{ 0%,100%{ opacity:0.7; transform:scale(1); } 50%{ opacity:1; transform:scale(1.04); } }
+  @keyframes dropIn{ 0%{ transform:translateY(-30px) rotate(-15deg); opacity:0; } 100%{ transform:translateY(0) rotate(0deg); opacity:1; } }
 
   /* ---- Manage tab ---- */
   .field{ margin-bottom:16px; }
@@ -444,7 +449,7 @@ const DEFAULT_QUESTIONS = [
 
   { id:'d16', text:'아래 영상은 스파이더맨: 브랜드 뉴 데이 공식 예고편의 시작 부분이다. 이 예고편은 마블 스튜디오 로고로 시작한다.', answer:'O', explanation:'마블 스튜디오 작품 예고편은 거의 항상 도입부에 마블 스튜디오 로고가 나와요.', video:{ id:'KRarob7gwC4', start:0, end:5 } },
 
-  { id:'d17', text:'아래 영상은 스파이더맨: 브랜드 뉴 데이 공식 예고편의 한 장면이다. 이 장면에는 빌런 스콜피온이 등장한다.', answer:'O', explanation:'예고편 1분 40초경 스콜피온이 등장하는 장면이에요.', video:{ id:'KRarob7gwC4', start:98, end:104 } }
+  { id:'d17', text:'아래 영상은 스파이더맨: 브랜드 뉴 데이 공식 예고편의 한 장면이다. 이 장면에서 스파이더맨은 헐크를 처음 만난다.', answer:'X', explanation:'둘은 이전 시리즈에서 이미 만난 적이 있어요.', video:{ id:'KRarob7gwC4', start:106, end:112 } }
 ];
 
 let questions = [];
@@ -511,11 +516,16 @@ function renderSolve(){
   if(quizOrder.length === 0){ startQuiz(); return; }
 
   if(quizIdx >= quizOrder.length){
+    const passed = score >= 15;
     solveBody.innerHTML = `
       <div class="result-wrap">
         <div class="eyebrow" style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.2em;color:var(--ink-soft);">RESULT</div>
         <div class="big"><span class="o">${score}</span><span class="slash"> / </span>${quizOrder.length}</div>
-        <div class="feedback-text">${score === quizOrder.length ? '전부 맞혔어요, 완벽해요!' : '수고했어요. 다시 풀면서 복습해볼까요?'}</div>
+        ${passed ? spiderPassAnim() : spiderFailAnim()}
+        <div class="feedback-text" style="font-size:17px; font-weight:700; margin-top:6px; color:${passed?'var(--o-green-deep)':'var(--x-red-deep)'};">
+          ${passed ? '당신은 이제 스파이더맨: 브랜드 뉴 데이를 볼 자격이 있습니다' : '당신은 아직 자격이 없습니다'}
+        </div>
+        <div class="feedback-text">${passed ? '15문제 이상 맞혔어요. 팬이라면 인정!' : '15문제 이상 맞혀야 자격이 주어져요. 다시 도전해볼까요?'}</div>
         <button class="primary-btn" id="btnRetry">다시 풀기</button>
       </div>`;
     document.getElementById('btnRetry').onclick = startQuiz;
@@ -632,6 +642,44 @@ function extractYoutubeId(url){
   if(!url) return null;
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : null;
+}
+
+function spiderPassAnim(){
+  return `
+    <div class="spider-anim">
+      <svg viewBox="0 0 200 140" class="web-burst">
+        <g stroke="#B23A2E" stroke-width="1.6" fill="none" opacity="0.55">
+          <line x1="100" y1="70" x2="100" y2="4"/>
+          <line x1="100" y1="70" x2="152" y2="18"/>
+          <line x1="100" y1="70" x2="196" y2="70"/>
+          <line x1="100" y1="70" x2="152" y2="122"/>
+          <line x1="100" y1="70" x2="100" y2="136"/>
+          <line x1="100" y1="70" x2="48" y2="122"/>
+          <line x1="100" y1="70" x2="4" y2="70"/>
+          <line x1="100" y1="70" x2="48" y2="18"/>
+          <circle cx="100" cy="70" r="22" opacity="0.5"/>
+          <circle cx="100" cy="70" r="42" opacity="0.35"/>
+        </g>
+      </svg>
+      <div class="spider-emoji">🕷️</div>
+    </div>`;
+}
+
+function spiderFailAnim(){
+  return `
+    <div class="spider-anim">
+      <svg viewBox="0 0 200 100" class="web-torn">
+        <g stroke="#8a8578" stroke-width="1.6" fill="none" opacity="0.5">
+          <line x1="100" y1="50" x2="90" y2="6"/>
+          <line x1="100" y1="50" x2="150" y2="24"/>
+          <line x1="100" y1="50" x2="180" y2="70"/>
+          <line x1="100" y1="50" x2="60" y2="94"/>
+          <line x1="100" y1="50" x2="16" y2="60"/>
+          <line x1="100" y1="50" x2="40" y2="10"/>
+        </g>
+      </svg>
+      <div class="spider-emoji" style="filter:grayscale(1); opacity:.7;">🕸️</div>
+    </div>`;
 }
 
 document.getElementById('btnAdd').onclick = async () => {

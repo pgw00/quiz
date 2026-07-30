@@ -260,6 +260,31 @@
   }
   .ox-toggle button.sel-o{ border-color:var(--o-green); color:var(--o-green-deep); background:#EFF6F1; }
   .ox-toggle button.sel-x{ border-color:var(--x-red); color:var(--x-red-deep); background:#FBEFED; }
+  .video-time-row{ display:flex; gap:12px; }
+  .video-time-row > div{ flex:1; }
+  .video-wrap{
+    position:relative;
+    width:100%;
+    padding-top:56.25%;
+    margin-bottom:16px;
+    border-radius:10px;
+    overflow:hidden;
+    border:1.5px solid var(--paper-line);
+    background:#000;
+  }
+  .video-wrap iframe{
+    position:absolute; top:0; left:0; width:100%; height:100%; border:none;
+  }
+  .video-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--gold);
+    border:1px solid var(--gold);
+    border-radius:999px;
+    padding:2px 8px;
+    margin-bottom:6px;
+  }
 
   .q-list{ margin-top:22px; border-top:2px solid var(--paper-line); padding-top:16px; }
   .q-list h3{
@@ -370,12 +395,27 @@
         <label>해설 (선택)</label>
         <input type="text" id="inputExpl" placeholder="정답 확인 후 보여줄 짧은 설명">
       </div>
+      <div class="field">
+        <label>유튜브 영상 (선택 · 짧은 구간만 재생돼요)</label>
+        <input type="text" id="inputVideoUrl" placeholder="예: https://www.youtube.com/watch?v=xxxxxxxxxxx">
+      </div>
+      <div class="field video-time-row">
+        <div>
+          <label>시작 (초)</label>
+          <input type="text" id="inputVideoStart" placeholder="예: 12">
+        </div>
+        <div>
+          <label>종료 (초)</label>
+          <input type="text" id="inputVideoEnd" placeholder="예: 17">
+        </div>
+      </div>
       <button class="primary-btn" id="btnAdd">+ 문제 추가하기</button>
       <div class="status-line" id="addStatus"></div>
 
       <div class="q-list">
         <h3 id="listTitle">등록된 문제</h3>
         <div id="qList"></div>
+        <button class="primary-btn" id="btnReset" style="background:#8a8578; margin-top:18px;">↺ 기본 문제로 초기화</button>
       </div>
     </div>
   </div>
@@ -400,7 +440,11 @@ const DEFAULT_QUESTIONS = [
   { id:'d12', text:'스파이더맨: 노 웨이 홈에서 주문이 잘못되면서 다른 세계관의 빌런들이 이 세계로 넘어온다.', answer:'O', explanation:'그린 고블린, 닥터 옥토퍼스 등 이전 스파이더맨 영화들의 빌런들이 등장해요.' },
   { id:'d13', text:'스파이더맨: 노 웨이 홈에는 오직 한 명의 스파이더맨만 등장한다.', answer:'X', explanation:'톰 홀랜드 외에 다른 두 세계관의 스파이더맨도 함께 등장해요.' },
   { id:'d14', text:'스파이더맨: 노 웨이 홈에서 메이 숙모는 마지막 전투 도중 목숨을 잃는다.', answer:'O', explanation:'이 사건이 이후 시리즈의 중요한 배경이 돼요.' },
-  { id:'d15', text:'스파이더맨: 노 웨이 홈 마지막에서 피터는 스트레인지에게 부탁해 세상 모든 사람의 기억에서 자신을 완전히 지운다.', answer:'O', explanation:'이 선택 때문에 스파이더맨: 브랜드 뉴 데이에서 아무도 그를 기억하지 못하는 상태로 이어져요.' }
+  { id:'d15', text:'스파이더맨: 노 웨이 홈 마지막에서 피터는 스트레인지에게 부탁해 세상 모든 사람의 기억에서 자신을 완전히 지운다.', answer:'O', explanation:'이 선택 때문에 스파이더맨: 브랜드 뉴 데이에서 아무도 그를 기억하지 못하는 상태로 이어져요.' },
+
+  { id:'d16', text:'아래 영상은 스파이더맨: 브랜드 뉴 데이 공식 예고편의 시작 부분이다. 이 예고편은 마블 스튜디오 로고로 시작한다.', answer:'O', explanation:'마블 스튜디오 작품 예고편은 거의 항상 도입부에 마블 스튜디오 로고가 나와요.', video:{ id:'KRarob7gwC4', start:0, end:5 } },
+
+  { id:'d17', text:'아래 영상은 스파이더맨: 브랜드 뉴 데이 공식 예고편의 한 장면이다. 이 장면에는 빌런 스콜피온이 등장한다.', answer:'O', explanation:'예고편 1분 40초경 스콜피온이 등장하는 장면이에요.', video:{ id:'KRarob7gwC4', start:98, end:104 } }
 ];
 
 let questions = [];
@@ -485,6 +529,7 @@ function renderSolve(){
       <span>문제 <b>${quizIdx+1}</b> / ${quizOrder.length}</span>
     </div>
     <div class="q-num">Q${String(quizIdx+1).padStart(2,'0')}.</div>
+    ${videoEmbedHtml(q)}
     <div class="q-text">${escapeHtml(q.text)}</div>
     <div class="choice-row" id="choiceRow">
       <button class="choice-btn o" data-v="O">O</button>
@@ -494,6 +539,19 @@ function renderSolve(){
   document.querySelectorAll('#choiceRow .choice-btn').forEach(btn=>{
     btn.onclick = () => answer(btn.dataset.v, q);
   });
+}
+
+function videoEmbedHtml(q){
+  if(!q.video || !q.video.id) return '';
+  const start = q.video.start || 0;
+  const end = q.video.end || (start + 5);
+  const src = `https://www.youtube-nocookie.com/embed/${q.video.id}?start=${start}&end=${end}&autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
+  const watchUrl = `https://www.youtube.com/watch?v=${q.video.id}&t=${start}s`;
+  return `
+    <div class="video-badge">🎬 영상 문제</div>
+    <div class="video-wrap"><iframe src="${src}" title="quiz video" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+    <div style="text-align:center; margin:-8px 0 16px;"><a href="${watchUrl}" target="_blank" rel="noopener" style="font-size:12px; color:var(--ink-soft);">영상이 안 보이면 여기를 눌러 유튜브에서 보기 ↗</a></div>
+  `;
 }
 
 function answer(val, q){
@@ -508,6 +566,7 @@ function answer(val, q){
       <span>문제 <b>${quizIdx+1}</b> / ${quizOrder.length}</span>
     </div>
     <div class="q-num">Q${String(quizIdx+1).padStart(2,'0')}.</div>
+    ${videoEmbedHtml(q)}
     <div class="q-text">${escapeHtml(q.text)}</div>
     <div class="stamp-zone">
       <div class="stamp ${correct?'correct':'wrong'}">${correct?'O':'X'}</div>
@@ -542,7 +601,7 @@ function renderList(){
     <div class="q-item" data-id="${q.id}">
       <div class="badge ${q.answer==='O'?'o':'x'}">${q.answer}</div>
       <div class="body">
-        <div class="qt">${escapeHtml(q.text)}</div>
+        <div class="qt">${escapeHtml(q.text)} ${q.video ? '<span class="video-badge" style="margin-left:4px;">🎬</span>' : ''}</div>
         ${q.explanation ? `<div class="expl">${escapeHtml(q.explanation)}</div>` : ''}
       </div>
       <button class="del" data-id="${q.id}">삭제</button>
@@ -569,20 +628,44 @@ function setPick(v){
   document.getElementById('btnPickX').className = v==='X' ? 'sel-x' : '';
 }
 
+function extractYoutubeId(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 document.getElementById('btnAdd').onclick = async () => {
   const text = document.getElementById('inputQuestion').value.trim();
   const expl = document.getElementById('inputExpl').value.trim();
+  const videoUrl = document.getElementById('inputVideoUrl').value.trim();
+  const videoStartRaw = document.getElementById('inputVideoStart').value.trim();
+  const videoEndRaw = document.getElementById('inputVideoEnd').value.trim();
   if(!text){ addStatus.textContent = '문제 내용을 입력해주세요.'; return; }
   if(!picked){ addStatus.textContent = '정답(O 또는 X)을 선택해주세요.'; return; }
 
+  let video = null;
+  if(videoUrl){
+    const vid = extractYoutubeId(videoUrl);
+    if(!vid){
+      addStatus.textContent = '유튜브 링크 형식을 확인해주세요.';
+      return;
+    }
+    const start = parseInt(videoStartRaw, 10) || 0;
+    const end = parseInt(videoEndRaw, 10) || (start + 5);
+    video = { id: vid, start, end };
+  }
+
   const newQ = {
     id: 'q_' + Date.now() + '_' + Math.floor(Math.random()*1000),
-    text, answer: picked, explanation: expl
+    text, answer: picked, explanation: expl, video
   };
   questions.push(newQ);
   renderList();
   document.getElementById('inputQuestion').value = '';
   document.getElementById('inputExpl').value = '';
+  document.getElementById('inputVideoUrl').value = '';
+  document.getElementById('inputVideoStart').value = '';
+  document.getElementById('inputVideoEnd').value = '';
   picked = null;
   document.getElementById('btnPickO').className = '';
   document.getElementById('btnPickX').className = '';
@@ -590,6 +673,15 @@ document.getElementById('btnAdd').onclick = async () => {
   addStatus.textContent = '저장 중...';
   const ok = await saveQuestions();
   addStatus.textContent = ok ? '문제가 추가됐어요.' : '저장에 실패했어요. 다시 시도해주세요.';
+  setTimeout(()=> addStatus.textContent = '', 2200);
+};
+
+document.getElementById('btnReset').onclick = async () => {
+  if(!confirm('현재 목록을 지우고 기본 문제(스파이더맨 문제 세트)로 되돌릴까요?')) return;
+  questions = DEFAULT_QUESTIONS.slice();
+  renderList();
+  const ok = await saveQuestions();
+  addStatus.textContent = ok ? '기본 문제로 초기화됐어요.' : '초기화 저장에 실패했어요.';
   setTimeout(()=> addStatus.textContent = '', 2200);
 };
 
